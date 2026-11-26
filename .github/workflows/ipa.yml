@@ -216,7 +216,7 @@ jobs:
           fi
 
       - name: Fix Theos od broken pipe issue
-        run: sed -i 's/od -c "$i" | head/od -c "$i" 2>\/dev\/null \vert{} head/g' "$THEOS/bin/convert_xml_plist.sh"
+        run: sed -i 's/od -c "$i" | head/od -c "$i" 2>\/dev\/null | head/g' "$THEOS/bin/convert_xml_plist.sh"
 
       - name: Install cyan and tbd
         run: |
@@ -297,15 +297,15 @@ jobs:
       - name: Build YouMod
         run: |
           cd YouMod
-          echo "YOUMOD_VERSION=$(grep '^Version:' control \vert{} cut -d ' ' -f2)" >> $GITHUB_ENV
-          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          echo "YOUMOD_VERSION=$(grep '^Version:' control | cut -d ' ' -f2)" >> $GITHUB_ENV
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
           mv packages/*.deb ${{ github.workspace }}/youmod.deb
 
       - name: Build YouPiP
         if: ${{ inputs.youpip }}
         run: |
           cd YouPiP
-          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
           mv packages/*.deb ${{ github.workspace }}/youpip.deb
 
       - name: Build YTUHD
@@ -314,11 +314,130 @@ jobs:
           cd YTUHD
           brew install meson ninja
           make libvpx dav1d
-          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless SIDELOAD=1
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless SIDELOAD=1 DPKG_DEB_COMPRESSOR=gzip messages=yes
           mv packages/*.deb ${{ github.workspace }}/ytuhd.deb
 
       - name: Build Return-YouTube-Dislikes
         if: ${{ inputs.ryd }}
         run: |
           cd Return-YouTube-Dislikes
-          make
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/ryd.deb
+
+      - name: Build YouGroupSettings
+        run: |
+          cd YouGroupSettings
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/ygs.deb
+
+      - name: Build YTVideoOverlay
+        if: ${{ inputs.youpip || inputs.ytuhd || inputs.youquality }}
+        run: |
+          cd YTVideoOverlay
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/ytvo.deb
+
+      - name: Build YTABConfig
+        if: ${{ inputs.abconfig }}
+        run: |
+          cd YTABConfig
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/ytabconfig.deb
+
+      - name: Build UncappedAVPlayer
+        run: |
+          cd UncappedAVPlayer
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless ARCHS=arm64 DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/uncapavplayer.deb
+
+      - name: Build DontEatMyContent
+        if: ${{ inputs.demc }}
+        run: |
+          cd DontEatMyContent
+          # Tweak.h has a tentative global (CGFloat constant;) in a header
+          # shared by two compile units; clang on Linux defaults to -fno-common.
+          sed -i 's/-fobjc-arc/-fobjc-arc -fcommon/' Makefile
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/demc.deb
+
+      - name: Build YouSlider
+        if: ${{ inputs.youslider }}
+        run: |
+          cd YouSlider
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/youslider.deb
+
+      - name: Build YTweaks
+        if: ${{ inputs.ytweaks }}
+        run: |
+          cd YTweaks
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/ytweaks.deb
+
+      - name: Build Gonerino
+        if: ${{ inputs.gonerino }}
+        run: |
+          cd Gonerino
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/gonerino.deb
+
+      - name: Build youtube-native-share
+        if: ${{ inputs.ytshare }}
+        run: |
+          cd youtube-native-share
+          git clone --quiet --depth=1 https://github.com/protocolbuffers/protobuf.git
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless ARCHS=arm64 DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/ytnativeshare.deb
+
+      - name: Build VolumeBoostYT
+        if: ${{ inputs.volboost }}
+        run: |
+          cd VolumeBoostYT
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless ARCHS=arm64 DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/volboostyt.deb
+
+      - name: Build YouQuality
+        if: ${{ inputs.youquality }}
+        run: |
+          cd YouQuality
+          make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless DPKG_DEB_COMPRESSOR=gzip messages=yes
+          mv packages/*.deb ${{ github.workspace }}/youquality.deb
+
+      - name: Download Custom App Icon
+        if: ${{ inputs.icon_url != '' }}
+        run: |
+          curl -sL "${{ inputs.icon_url }}" -o custom_icon.png
+          if [ -s custom_icon.png ]; then
+            echo "Custom icon downloaded successfully."
+          else
+            echo "Failed to download custom icon or empty file."
+            exit 1
+          fi
+
+      - name: Inject Tweaks Into IPA
+        run: |
+          icon_arg=""
+          if [ -f custom_icon.png ]; then
+            icon_arg="-k custom_icon.png"
+          fi
+          cyan -i youtube.ipa -o YouMod_${{ env.YT_VERSION }}_v${{ env.YOUMOD_VERSION }}.ipa -uwef *.deb -n "${{ inputs.display_name }}" -b ${{ inputs.bundle_id }} $icon_arg
+
+      - name: Create a Draft Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: youmod-ipa${{ github.run_number }}
+          name: YouMod_${{ env.YT_VERSION }}_v${{ env.YOUMOD_VERSION }} (${{ github.run_number }})
+          files: YouMod_${{ env.YT_VERSION }}_v${{ env.YOUMOD_VERSION }}.ipa
+          draft: true
+
+      - name: Job Summary - Build Complete
+        run: |
+          echo -e '### 🛠️ Build IPA with tweaks Complete!' >> $GITHUB_STEP_SUMMARY
+
+      - name: Job Summary - Output the Draft Release Link
+        run: |
+          echo -e '### 🚀 Draft Release\n\nDraft release has been created successfully! You can view your release here: https://github.com/${{ github.repository }}/releases' >> $GITHUB_STEP_SUMMARY
+
+      - name: Job Summary - Cleanup
+        run: |
+          echo -e '### 🧹 Cleanup\n\nYou can remove previous GitHub Actions run here: https://github.com/${{ github.repository }}/actions/workflows/delete-old-workflows-run.yml And if you want to delelte old draft releases you have then here: https://github.com/${{ github.repository }}/actions/workflows/delete-old-draft-releases.yml' >> $GITHUB_STEP_SUMMARY
